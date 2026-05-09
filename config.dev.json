@@ -15,36 +15,57 @@
   "adminOnly": {
     "enable": false,
     "ignoreCommand": []
-  }, 
+  },
+  "developerOnly": {
+    "enable": false,
+    "ignoreCommand": []
+  },
+  "vipOnly": {
+    "enable": false,
+    "ignoreCommand": []
+  },
   "adminBot": [
-    "61561648169981"
+    "61561648169981",
+    
   ],
+  "developer": [
+    "61561648169981",
+
+  ], 
+  "vipuser": [
+    "61561648169981",
+    
+  ], 
+  "reactBy": {
+    "delete": ["🗑️", "❌", "😠", "😡", "😾"],
+    "kick": ["👟", "🦵"]
+  }, 
   "whiteListMode": {
     "enable": false,
     "whiteListIds": [],
     "notes": "if you enable this feature, only the ids in the whiteListIds section can use the bot"
   },
-  "nickNameBot": "➤『  𝘾𝙖𝙨𝙨𝙞𝙙𝙮 𝘼𝙞 』☜ヅ",
+  "nickNameBot": "۝𝙘𝙖𝙨𝙨𝙞𝙙𝙮-𝙗𝙤𝙩 ",
   "prefix": "¢",
   "database": {
-    "type": "sqlite",
-    "uriMongodb": "",
-    "autoSyncWhenStart": false,
+    "type": "mongodb",
+    "uriMongodb": "mongodb+srv://Christus:voldigo225@cluster0.gykt2by.mongodb.net/?appName=Cluster0",
+    "autoSyncWhenStart": "true",
     "autoRefreshThreadInfoFirstTime": true,
     "notes": "(1) type selects 'json' or 'sqlite' or 'mongodb'. If you choose mongodb, enter uri connect mongodb in the uriMongodb section, instructions to get uri connect mongodb at: https://youtu.be/z1f9urHW5xY. I recommend using 'mongodb' or 'sqlite', json is not recommended because it is not stable. (2) when you set autoSyncWhenStart to true, the bot will automatically synchronize the data in the database when starting the bot, this will make the bot start slower. (3) when you set autoRefreshThreadInfoFirstTime to true, the bot will automatically refresh the thread information when get first message from the thread since starting the bot"
   },
   "timeZone": "Asia/Dhaka",
     "credentials": {
     "gmailAccount": {
-      "email": "romeobot555@gmail.com",
-      "clientId": "938512788954-ndaggmsbqkf0a6ougkc7p0iek446ikt1.apps.googleusercontent.com",
-      "clientSecret": "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",
-      "refreshToken": "1//046ZXiqfQpbF1CgYIARAAGAQSNwF-L9Ir8uPenmtD9Co8psKc7goPgaxSfYG_TJreIbnB1mKgwC0vKP9t4Ir-kxjf-YMNGd124TQ",
+      "email": "maybesaim12@gmail.com",
+      "clientId": "100897454411-5r8hk9opvdijmogm98ksttg4asvfs3u6.apps.googleusercontent.com",
+      "clientSecret": "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",
+      "refreshToken": "1//04CwY3A993tGWCgYIARAAGAQSNwF-L9IrEMdVj25IWIOrpT0HX7Lo4YXx6ce0JP-C3GjKoyWSFb_-f_N3oHRL15ZwrsQ8TpBsjmI",
       "apiKey": ""
     },
     "gRecaptcha": {
-      "siteKey": "6LfH6HQrAAAAACmNc3LTiJFLiUvMpFblCUqj6pd1",
-      "secretKey": "6LfH6HQrAAAAAEhnFm96bt-CeDuXcAGDFKeWPVEq"
+      "siteKey": "6LdZTuIrAAAAAEJ9LXfW4a0V97vUPe31lp95DKvA",
+      "secretKey": "6LdZTuIrAAAAAEEK-qSFLsTkK_RJQnL4yTIhcJcL"
     }
   },
   "dashBoard": {
@@ -58,7 +79,7 @@
     "socket": {
       "enable": true,
       "channelName": "uptime",
-      "verifyToken": ""
+      "verifyToken": "u1940319-ea7f101121162c69af48f6ce"
     }
   },
   "autoRestart": {
@@ -113,7 +134,9 @@
     "userBanned": false,
     "needRoleToUseCmd": false,
     "needRoleToUseCmdOnReply": false,
-    "needRoleToUseCmdOnReaction": false
+    "needRoleToUseCmdOnReaction": false,
+    "developerOnly": false, 
+    "vipOnly": false
   },
   "logEvents": {
     "disableAll": false,
