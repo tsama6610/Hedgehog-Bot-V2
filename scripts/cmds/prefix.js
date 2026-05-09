@@ -13,8 +13,10 @@ module.exports = {
 		guide: {
 			en:
 "   {pn} <nouveau préfixe>\n" +
+"   ━━━━━━ ◦ ❖ ◦ ━━━━━━\n" +
 "   Exemple:\n    {pn} #\n\n" +
 "   {pn} <nouveau préfixe> -g (admin bot)\n" +
+"   ━━━━━━ ◦ ❖ ◦ ━━━━━━\n" +
 "   Exemple:\n    {pn} # -g\n\n" +
 "   {pn} reset"
 		}
@@ -22,19 +24,29 @@ module.exports = {
 
 	langs: {
 		en: {
-			reset: "Préfixe réinitialisé: %1",
-			onlyAdmin: "Seul un admin bot peut faire ça",
-			confirmGlobal: "Réagis pour confirmer le changement global",
-			confirmThisThread: "Réagis pour confirmer dans ce groupe",
-			successGlobal: "Préfixe global changé: %1",
-			successThisThread: "Préfixe du groupe changé: %1",
+			reset: "┏━━━━━━━━━━━━━━━┓\n🔄 Préfixe réinitialisé : %1\n┗━━━━━━━━━━━━━━━┛",
+
+			onlyAdmin: "⛔ Seul un admin bot peut faire ça",
+
+			confirmGlobal:
+"━━━━━━━━━━━━━━━\n⚠️ Confirmation requise\n🌐 Changement GLOBAL\nRéagis pour confirmer\n━━━━━━━━━━━━━━━",
+
+			confirmThisThread:
+"━━━━━━━━━━━━━━━\n⚠️ Confirmation requise\n💬 Changement dans ce groupe\nRéagis pour confirmer\n━━━━━━━━━━━━━━━",
+
+			successGlobal:
+"━━━━━━━━━━━━━━━\n✅ Préfixe global changé : %1\n━━━━━━━━━━━━━━━",
+
+			successThisThread:
+"━━━━━━━━━━━━━━━\n✅ Préfixe du groupe changé : %1\n━━━━━━━━━━━━━━━",
 
 			myPrefix:
 `
-┅┅┅┅┅┅┅༻❁༺┅┅┅┅┅┅┅
-⚙️ 𝑺𝒚𝒔𝒕𝒆̀𝒎𝒆 : %1 ┃
-💬 𝑮𝒓𝒐𝒖𝒑𝒆 : %2 ┃
-┅┅┅┅┅┅┅༻❁༺┅┅┅┅┅┅`
+━━━━━━━━━━━━━━ ◦ ❖ ◦ ━━━━━━
+⚙️  𝑺𝒚𝒔𝒕𝒆̀𝒎𝒆 : %1
+💬  𝑮𝒓𝒐𝒖𝒑𝒆 : %2
+━━━━━━━━━━━━━━ ◦ ❖ ◦ ━━━━━━
+`
 		}
 	},
 
@@ -65,7 +77,9 @@ module.exports = {
 		}
 
 		return message.reply(
-			args[1] === "-g" ? getLang("confirmGlobal") : getLang("confirmThisThread"),
+			args[1] === "-g"
+				? getLang("confirmGlobal")
+				: getLang("confirmThisThread"),
 			(err, info) => {
 				formSet.messageID = info.messageID;
 				global.GoatBot.onReaction.set(info.messageID, formSet);
