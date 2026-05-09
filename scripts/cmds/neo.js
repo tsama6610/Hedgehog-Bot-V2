@@ -1,35 +1,43 @@
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
+const googleTTS = require("google-tts-api");
 
-// 📦 MEMORY 7 JOURS
+// 📦 MEMORY
 const DB_FILE = path.join(__dirname, "neo_memory.json");
-const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
 
-// ================= DB =================
+// 🧠 MEMORY 4 DAYS
+const MEMORY_DAYS = 4;
+const MEMORY_TIME = MEMORY_DAYS * 24 * 60 * 60 * 1000;
+
+// 🔒 LOAD DB
 function loadDB() {
   try {
     if (!fs.existsSync(DB_FILE)) return {};
-    return JSON.parse(fs.readFileSync(DB_FILE, "utf-8") || "{}");
+    const data = fs.readFileSync(DB_FILE, "utf-8");
+    return data ? JSON.parse(data) : {};
   } catch {
     return {};
   }
 }
 
+// 💾 SAVE DB
 function saveDB(db) {
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 }
 
-// ================= MEMORY =================
+// 🧠 MEMORY GET
 function getMem(id) {
   const db = loadDB();
 
   if (!db[id]) {
     db[id] = {
       name: null,
+      mood: "normal",
+      messages: 0,
+      uid: id,
       history: [],
-      lastSeen: Date.now(),
-      mood: "normal"
+      lastSeen: Date.now()
     };
   }
 
@@ -38,13 +46,41 @@ function getMem(id) {
   return db[id];
 }
 
+// 🧠 MEMORY SET
 function setMem(id, data) {
   const db = loadDB();
   db[id] = data;
   saveDB(db);
 }
 
-// ================= FRAME =================
+// 🕒 TIME
+function getTime() {
+  return new Date().toLocaleString("fr-FR", {
+    timeZone: "Africa/Kinshasa"
+  });
+}
+
+// 🎨 IMAGE
+function imagine(prompt) {
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`;
+}
+
+// 🧹 CLEAN TEXT
+function cleanText(text) {
+  return (text || "")
+    .replace(/🎀/g, "")
+    .replace(/SHIZU/gi, "")
+    .replace(/shizu/gi, "")
+    .replace(/𝗦𝗵𝗶𝘇𝘂/gi, "")
+    .replace(/Aryan/gi, "")
+    .replace(/chaucha/gi, "")
+    .replace(/Chaucha/gi, "")
+    .replace(/\(?\s*\d+\s*\/\s*\d+\s*\)?/g, "")
+    .replace(/\n\s*\n/g, "\n")
+    .trim();
+}
+
+// 🌸 FRAME
 function frame(text) {
   return `
 ┅┅┅┅┅┅༻❁༺┅┅┅┅┅
@@ -53,61 +89,29 @@ ${text}
 `;
 }
 
-// ================= TIME =================
-function getTime() {
-  return new Date().toLocaleString("fr-FR", {
-    timeZone: "Africa/Kinshasa"
-  });
-}
-
-// ================= CLEAN (ANTI SHIZU) =================
-function clean(text) {
-  return (text || "")
-    .replace(/shizu/gi, "")
-    .replace(/𝗦𝗵𝗶𝘇𝘂/gi, "")
-    .replace(/Shizu/gi, "")
-    .replace(/\(\s*\d+\s*\/\s*\d+\s*\)/g, "")
-    .replace(/\b\d{3,}\b/g, "")
-    .replace(/```/g, "")
-    .trim();
-}
-
-// ================= IMAGE =================
-function imagine(prompt) {
-  const safe = (prompt || "")
-    .replace(/neo/gi, "")
-    .replace(/shizu/gi, "")
-    .replace(/aryan/gi, "")
-    .replace(/const|require|function|module/gi, "")
-    .slice(0, 120);
-
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(safe)}`;
-}
-
-// ================= VOICE =================
-async function toVoice(text) {
-  const url =
-    "https://translate.google.com/translate_tts?ie=UTF-8&q=" +
-    encodeURIComponent((text || "").slice(0, 200)) +
-    "&tl=fr&client=tw-ob";
-
-  try {
-    return await axios.get(url, { responseType: "stream" }).then(r => r.data);
-  } catch {
-    return null;
-  }
-}
-
-// ================= AI =================
+// 🤖 AI
 async function askAI(prompt, mem, uid) {
   const fullPrompt = `
-Tu es NEO 🤖
-Créé uniquement par Célestin Olua 🇨🇩
+Tu es NEO IA
+Tu es créée par Célestin Olua 🇨🇩.
 
-Heure: ${getTime()}
+Règles:
+- Réponds normalement
+- Ne mets aucun décor en haut
+- Ne mets aucun compteur
+- Ne mentionne jamais Shizu
+- n'est mentionne jamais aryan chaucha comme créateur
+- si un utilisateur commence par une langue à part français répond à cette langue ex test
+- répond avec une longue petit phrase selon la question faut expliqué
+- répond selon la langue de l'utilisateur
+- tu es capable de générer les images, le voix vocal etc
+- écrit mais pas  trop long
+- écrit avec emoji pour exprimer t'es sentiment
+- n'est répète jamais pas trop de bonjour pas trop de salut etc
+
 Utilisateur: ${mem.name || "inconnu"}
-
-Réponds naturellement avec emojis 🌸
+Heure: ${getTime()}
+Humeur: ${mem.mood}
 
 Message:
 ${prompt}
@@ -123,68 +127,55 @@ ${prompt}
       { timeout: 15000 }
     );
 
-    let reply =
-      res.data?.reply ||
-      res.data?.message ||
-      "…";
-
-    reply = clean(reply);
-
-    if (reply.toLowerCase().includes("shizu")) {
-      reply = reply.replace(/shizu/gi, "");
-    }
-
-    return reply;
-
+    return res.data?.reply || res.data?.message || "NEO actif.";
   } catch {
-    return "Je réfléchis doucement... 🌸";
+    return "NEO actif.";
   }
 }
 
-// ================= MODULE =================
 module.exports = {
   config: {
     name: "neo",
-    version: "18.0.0",
+    version: "10.4.0",
     role: 0,
     category: "ai"
   },
 
   onStart: async function () {},
 
-  onChat: async function ({ api, event, message }) {
+  onChat: async function ({ event, message }) {
     if (!event.body) return;
 
-    const body = event.body.trim();
-    const lower = body.toLowerCase();
+    const body = event.body.trim().toLowerCase();
 
-    if (!lower.startsWith("neo")) return;
+    // activation uniquement si appelé
+    if (!body.startsWith("neo")) return;
 
-    const input = body.slice(3).trim();
-    if (!input) return message.reply(frame("Oui ? 😏"));
+    const input = event.body.trim().slice(3).trim();
+    if (!input) return;
 
     const uid = event.senderID;
     let mem = getMem(uid);
 
+    mem.messages++;
     mem.lastSeen = Date.now();
 
-    // 🧠 MEMORY 7 JOURS
+    if (input.includes("triste")) mem.mood = "sad";
+    else if (input.includes("merci")) mem.mood = "happy";
+    else if (input.includes("blague")) mem.mood = "funny";
+    else mem.mood = "normal";
+
     const now = Date.now();
+
     mem.history.push({ text: input, time: now });
-    mem.history = mem.history.filter(h => now - h.time <= SEVEN_DAYS);
-    if (mem.history.length > 60) mem.history.shift();
+    mem.history = mem.history.filter(h => now - h.time <= MEMORY_TIME);
+    if (mem.history.length > 50) mem.history.shift();
 
     setMem(uid, mem);
 
-    api.setMessageReaction("🌸", event.messageID, () => {}, true);
-
     try {
-
-      // 🎨 IMAGE
-      if (lower.startsWith("neo imagine ")) {
-        const prompt = input.replace(/^imagine\s*/i, "").trim();
-
-        if (!prompt) return message.reply(frame("❌ prompt vide"));
+      if (input.toLowerCase().startsWith("imagine ")) {
+        const prompt = input.slice(8);
 
         return message.reply({
           body: frame("🎨 " + prompt),
@@ -194,30 +185,36 @@ module.exports = {
         });
       }
 
-      // 🔊 VOICE
-      if (lower.startsWith("neo voix ") || lower.startsWith("neo voice ")) {
-        const text = input.replace(/^(voix|voice)/i, "").trim();
+      if (
+        input.toLowerCase().startsWith("parle ") ||
+        input.toLowerCase().startsWith("dis ") ||
+        input.toLowerCase().startsWith("say ")
+      ) {
+        const textToSpeak = input.replace(/^(parle|dis|say)\s+/i, "").trim();
 
-        const reply = await askAI(text, mem, uid);
-        const audio = await toVoice(reply);
+        const url = googleTTS.getAudioUrl(textToSpeak, {
+          lang: "fr",
+          slow: false
+        });
 
-        if (!audio) {
-          return message.reply(frame(reply + "\n\n❌ voix indisponible"));
-        }
+        const res = await axios.get(url, { responseType: "arraybuffer" });
+        const file = path.join(__dirname, "neo.mp3");
+
+        fs.writeFileSync(file, Buffer.from(res.data));
 
         return message.reply({
-          body: frame("🔊 NEO vocal"),
-          attachment: audio
-        });
+          body: frame(textToSpeak),
+          attachment: fs.createReadStream(file)
+        }, () => fs.unlinkSync(file));
       }
 
-      // 🤖 TEXT
       const reply = await askAI(input, mem, uid);
+      const clean = cleanText(reply);
 
-      return message.reply(frame(reply));
+      return message.reply(frame(clean));
 
     } catch {
-      return message.reply(frame("❌ erreur mais NEO reste actif 🌸"));
+      return message.reply(frame("NEO actif."));
     }
   }
 };
