@@ -1,7 +1,43 @@
-<img src="https://i.imgur.com/fsmRQfP.gif" alt="banner">
+<img src="https://media.tenor.com/6JptszQgCnkAAAAC/naruto-uzumaki.gif" alt="banner">
 
-<h1 align="center">✅ Hébergement réussi</h1>
+<h1 align="center">🍥 CASSIDY BOT - NARUTO EDITION 🍥</h1>
 
 <p align="center">
-🔗 URL : https://i.imgur.com/fsmRQfP.gif
+⚡ Puissance • Style • Performance ⚡  
+🎌 Bot Messenger inspiré de l’univers Naruto  
 </p>
+
+---
+
+## ✨ Présentation
+
+Cassidy Bot est un bot Messenger puissant 🤖  
+inspiré de l’univers **Naruto 🍥** avec :
+
+- 🎌 Design anime stylé  
+- 🧠 Intelligence artificielle  
+- 💬 Réponses automatiques  
+- 📩 Messages privés  
+- ⚙️ Commandes avancées  
+
+---
+
+## 🔥 Fonctionnalités
+
+✨ Commandes anime (Naruto, Sasuke, Gojo…)  
+🎮 Jeux intégrés  
+🧠 IA intelligente  
+📩 Réponse privée automatique  
+👑 Système admin  
+📊 Logs système  
+🎨 Interface stylée  
+
+---
+
+## ⚙️ Installation
+
+```bash
+git clone https://github.com/flackodisk12-sudo/Cassidy-bot
+cd Cassidy-bot
+npm install
+npm start
