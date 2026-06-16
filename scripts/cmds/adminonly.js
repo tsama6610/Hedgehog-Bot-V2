@@ -1,75 +1,80 @@
-const fs = require("fs-extra");
-const { config } = global.GoatBot;
+const { createCanvas, loadImage } = require('canvas');
+const fs = require('fs-extra');
+const path = require('path');
 const { client } = global;
 
-// 🌸 CADRE NEO
-function frameNeo(text) {
-  return `
-🌸 ࿇ ══━━✥🌺✥━━══ ࿇ 🌸
+// 🖼️ Fonction de génération d'image "Lourde"
+async function createAdminStatusImage(userName, userId, status) {
+    const canvas = createCanvas(800, 400);
+    const ctx = canvas.getContext('2d');
 
-👑  — 𝐒𝐘𝐒𝐓𝐄̀𝐌𝐄 𝐑𝐎𝐘𝐀𝐋
+    // Fond style "Néo"
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, 800, 400);
+    ctx.strokeStyle = status ? '#10b981' : '#ef4444';
+    ctx.lineWidth = 15;
+    ctx.strokeRect(0, 0, 800, 400);
 
-${text}
+    // Avatar utilisateur
+    try {
+        const avatar = await loadImage(`https://graph.facebook.com/${userId}/picture?width=300&height=300`);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(120, 200, 80, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(avatar, 40, 120, 160, 160);
+        ctx.restore();
+    } catch(e) {}
 
-🌸 ࿇ ══━━✥🌺✥━━══ ࿇ 🌸
-`;
+    // Texte Royal
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 35px Arial';
+    ctx.fillText("SYSTÈME ROYAL - NÉO", 230, 150);
+    
+    ctx.fillStyle = status ? '#10b981' : '#ef4444';
+    ctx.font = 'bold 45px Arial';
+    ctx.fillText(status ? "MODE ADMIN ACTIVÉ" : "MODE ADMIN DÉSACTIVÉ", 230, 220);
+    
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Action effectuée par : ${userName}`, 230, 260);
+
+    const p = path.join(__dirname, 'cache', `admin_${Date.now()}.png`);
+    await fs.ensureDir(path.join(__dirname, 'cache'));
+    await fs.writeFile(p, canvas.toBuffer('image/png'));
+    return p;
 }
 
 module.exports = {
-config: {
-name: "adminonly",
-aliases: ["adonly", "onlyad", "onlyadmin"],
-version: "2.0",
-author: "Célestin Olua",
-countDown: 5,
-role: 2,
-description: {
-fr: "Activer/désactiver le mode admin uniquement"
-},
-category: "owner",
-guide: {
-fr:
-"   {pn} on/off : activer ou désactiver le mode admin\n" +
-"   {pn} noti on/off : activer ou désactiver les notifications"
-}
-},
+    config: {
+        name: "adminonly",
+        aliases: ["adonly", "onlyad"],
+        version: "2.1",
+        role: 2,
+        category: "owner",
+        description: "Active/Désactive le mode admin avec un visuel de haute qualité."
+    },
 
-langs: {
-fr: {
-turnedOn: frameNeo("👑 Le mode ROYAL est activé.\n✨ Seuls les administrateurs peuvent utiliser le bot."),
-turnedOff: frameNeo("🌿 Le mode royal est désactivé.\n✨ Tous les membres peuvent utiliser le bot."),
-turnedOnNoti: frameNeo("🔔 Les notifications sont activées.\n👑 Les non-admins seront avertis."),
-turnedOffNoti: frameNeo("🔕 Les notifications sont désactivées.\n🌿 Le silence règne à nouveau.")
-}
-},
+    onStart: async function ({ args, message, event, usersData, config }) {
+        if (!args[0] || (args[0] !== "on" && args[0] !== "off")) {
+            return message.reply("⚠️ Usage: adminonly on/off");
+        }
 
-onStart: function ({ args, message, getLang }) {
-let isSetNoti = false;
-let value;
-let indexGetVal = 0;
+        const value = args[0] === "on";
+        const userName = await usersData.getName(event.senderID);
+        
+        // Mise à jour de la config
+        config.adminOnly.enable = value;
+        fs.writeFileSync(client.dirConfig, JSON.stringify(config, null, 2));
 
-if (args[0] == "noti") {
-	isSetNoti = true;
-	indexGetVal = 1;
-}
+        // Génération et envoi de l'image
+        const imagePath = await createAdminStatusImage(userName, event.senderID, value);
+        
+        await message.reply({
+            body: value ? "👑 Mode Royal activé." : "🌿 Mode Royal désactivé.",
+            attachment: fs.createReadStream(imagePath)
+        });
 
-if (args[indexGetVal] == "on")
-	value = true;
-else if (args[indexGetVal] == "off")
-	value = false;
-else
-	return message.reply(frameNeo("⚠️ Commande invalide.\n👑 Utilise : adminonly on/off"));
-
-if (isSetNoti) {
-	config.hideNotiMessage.adminOnly = !value;
-	message.reply(getLang(value ? "turnedOnNoti" : "turnedOffNoti"));
-}
-else {
-	config.adminOnly.enable = value;
-	message.reply(getLang(value ? "turnedOn" : "turnedOff"));
-}
-
-fs.writeFileSync(client.dirConfig, JSON.stringify(config, null, 2));
-}
-
+        await fs.unlink(imagePath);
+    }
 };
