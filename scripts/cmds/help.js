@@ -20,9 +20,7 @@ function toSmallCaps(text) {
 async function generateHelpCanvas(userId, userName, categories) {
   const allFlattened = [];
   
-  // Tri et organisation des catégories avec récupération des auteurs uniques par catégorie
   Object.keys(categories).sort().forEach(cat => {
-    // Récupérer les auteurs des commandes de cette catégorie
     const authors = [...new Set(categories[cat].map(c => commands.get(c).config.author || "Inconnu"))].join(", ");
     allFlattened.push({ type: 'cat', name: `${cat.toUpperCase()}`, author: authors });
     
@@ -33,24 +31,18 @@ async function generateHelpCanvas(userId, userName, categories) {
 
   const startY = 145;
   const lineHeight = 22;
-  const colWidth = 230; // Augmenté pour laisser de la place aux noms longs
+  const colWidth = 240; 
   const startX = 40;
   
-  let columnsCount = 4;
-  let itemsPerCol = Math.ceil(allFlattened.length / columnsCount);
-  let contentHeight = itemsPerCol * lineHeight;
+  // Correction de la boucle infinie : On fixe le nombre de colonnes à 4 de base 
+  // et on calcule directement la hauteur requise.
+  const columnsCount = 4;
+  const itemsPerCol = Math.ceil(allFlattened.length / columnsCount);
+  const contentHeight = itemsPerCol * lineHeight;
   
-  let squareSize = Math.max(850, startY + contentHeight + 60);
-  
-  while ((columnsCount * colWidth + startX * 2) > squareSize) {
-    columnsCount++;
-    itemsPerCol = Math.ceil(allFlattened.length / columnsCount);
-    contentHeight = itemsPerCol * lineHeight;
-    squareSize = Math.max(850, startY + contentHeight + 60);
-  }
-  
-  const canvasWidth = squareSize;
-  const canvasHeight = squareSize;
+  // Largeur fixe basée sur les 4 colonnes, et hauteur dynamique selon le contenu
+  const canvasWidth = (columnsCount * colWidth) + (startX * 2);
+  const canvasHeight = Math.max(850, startY + contentHeight + 60);
 
   const canvas = createCanvas(canvasWidth, canvasHeight);
   const ctx = canvas.getContext('2d');
@@ -95,7 +87,6 @@ async function generateHelpCanvas(userId, userName, categories) {
     if (item.type === 'cat') {
       ctx.fillStyle = '#00f2fe';
       ctx.font = 'bold 11px "Sans-Serif"';
-      // Coupe le nom de l'auteur si trop long pour la colonne
       const displayAuthor = item.author.length > 15 ? item.author.substring(0, 12) + '..' : item.author;
       ctx.fillText(`[ ${item.name} ] ✍️ ${displayAuthor}`, x, y);
     } else {
@@ -135,7 +126,7 @@ module.exports = {
         const replyMsg = `
 🌐 [ ᴄᴏɴꜰɪɢᴜʀᴀᴛɪᴏɴ ѕʏѕᴛᴇᴍ // ${cfg.name.toUpperCase()} ]
 ──────────────────────────────
-🔹 𝖭𝗈nom : ${toSmallCaps(cfg.name)}
+🔹 𝖭𝗈𝗆 : ${toSmallCaps(cfg.name)}
 🔹 𝖢𝗋ᴇ́𝖺𝗍𝖾𝗎𝗋 : ${cfg.author || "Inconnu"}
 🔹 𝖣𝖾𝗌𝖼𝗋𝗂𝗉ᴛɪᴏ𝗇 : ${cfg.description?.en || cfg.shortDescription?.en || "Aucune description"}
 🔹 𝖢𝖺𝗍ᴇ́ɢᴏʀɪᴇ : ${toSmallCaps(cfg.category || "info")}
@@ -213,9 +204,12 @@ module.exports = {
       const res = await message.reply({
         body: "✨ Répondez à cette image avec le nom d'un module pour ouvrir ses configurations.\n\n📱 *Mode Basique :* Utilisez la commande `.help all` si l'image ne charge pas.",
         attachment: fs.createReadStream(imagePath)
-      }, () => {
-        if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
       });
+
+      // Suppression sécurisée après l'envoi
+      setTimeout(() => {
+        if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
+      }, 5000);
 
       global.GoatBot.onReply.set(res.messageID, {
         commandName: this.config.name,
