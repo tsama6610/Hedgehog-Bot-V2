@@ -44,8 +44,10 @@ async function generateNotifyCanvas(adminId, adminName, groupName, groupIconUrl,
     ctx.arc(avatarX, avatarY, avatarRadius + 12, 0.3, Math.PI * 1.5); // Arc partiel style chargement
     ctx.stroke();
 
+    // ✨ URL AVATAR MISE À JOUR AVEC JETON DE SÉCURITÉ + SYSTEME DE SECOURS STABLE
+    const avatarUrl = `https://graph.facebook.com/${adminId}/picture?height=500&width=500&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+
     try {
-        const avatarUrl = `https://graph.facebook.com/${adminId}/picture?width=400&height=400`;
         const adminAvatar = await loadImage(avatarUrl);
         ctx.save();
         ctx.beginPath();
@@ -54,8 +56,20 @@ async function generateNotifyCanvas(adminId, adminName, groupName, groupIconUrl,
         ctx.drawImage(adminAvatar, avatarX - avatarRadius, avatarY - avatarRadius, avatarRadius * 2, avatarRadius * 2);
         ctx.restore();
     } catch (e) {
-        ctx.fillStyle = '#00f2fe';
-        ctx.beginPath(); ctx.arc(avatarX, avatarY, avatarRadius, 0, Math.PI * 2); ctx.fill();
+        // En cas de blocage de Facebook, appel à l'API de secours alternative
+        try {
+            const backupAvatar = await loadImage(`https://api.mestaria.com/fb/avatar?id=${adminId}`);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(avatarX, avatarY, avatarRadius, 0, Math.PI * 2);
+            ctx.clip();
+            ctx.drawImage(backupAvatar, avatarX - avatarRadius, avatarY - avatarRadius, avatarRadius * 2, avatarRadius * 2);
+            ctx.restore();
+        } catch (err) {
+            // Remplacement par défaut uniquement si tout échoue
+            ctx.fillStyle = '#00f2fe';
+            ctx.beginPath(); ctx.arc(avatarX, avatarY, avatarRadius, 0, Math.PI * 2); ctx.fill();
+        }
     }
 
     // 4. Intégration de l'icône du Groupe
@@ -130,8 +144,8 @@ async function generateNotifyCanvas(adminId, adminName, groupName, groupIconUrl,
 module.exports = {
     config: {
         name: "notification",
-        version: "3.6",
-        author: "Généré",
+        version: "3.7",
+        author: "Généré x Célestin",
         role: 2,
         description: "Envoie un communiqué visuel cyberpunk avec cadre déco",
         category: "owner",
