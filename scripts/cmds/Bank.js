@@ -1,8 +1,8 @@
 "use strict";
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  STUDIO BANK SYSTEM v2026 — Clean & Minimal Cobalt Edition
-//  Canvas   : 900 × 500 px — Interface Bancaire Premium Épurée
+//  STUDIO BANK SYSTEM v2026 — Clean & Minimal Cobalt Edition (Dynamic Avatar)
+//  Canvas   : 900 × 500 px — Interface Bancaire Premium Épurée avec Profil FB
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const fs = require("fs-extra");
@@ -21,8 +21,27 @@ try {
 } catch (e) { console.error("Canvas indisponible :", e.message); }
 
 // Configuration des constantes bancaires
-const INTEREST_RATE = 0.02; // 2% d'intérêts par heure ou par action
+const INTEREST_RATE = 0.02; // 2% d'intérêts par action
 const SUFFIXES = { k: 1e3, m: 1e6, b: 1e9, t: 1e12 };
+
+// Polyfill pour roundRect si l'ancienne version de node-canvas est utilisée
+if (canvasAvailable) {
+  const { CanvasRenderingContext2D } = require("canvas");
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+      if (w < 2 * r) r = w / 2;
+      if (h < 2 * r) r = h / 2;
+      this.beginPath();
+      this.moveTo(x + r, y);
+      this.arcTo(x + w, y, x + w, y + h, r);
+      this.arcTo(x + w, y + h, x, y + h, r);
+      this.arcTo(x, y + h, x, y, r);
+      this.arcTo(x, y, x + w, y, r);
+      this.closePath();
+      return this;
+    };
+  }
+}
 
 function fmt(n) {
   if (n == null || isNaN(n)) return "$0";
@@ -46,7 +65,7 @@ function parseAmount(input, currentBalance) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  ENGINE CANVAS - RENDU RELEVÉ DE COMPTE
+//  ENGINE CANVAS - RENDU RELEVÉ DE COMPTE AVEC PHOTO DE PROFIL DYNAMIQUE
 // ═══════════════════════════════════════════════════════════════════════════════
 async function generateBankCanvas(userId, userName, cash, bank, statusText) {
   const canvas = createCanvas(900, 500);
@@ -60,59 +79,94 @@ async function generateBankCanvas(userId, userName, cash, bank, statusText) {
   ctx.fillStyle = '#1e293b';
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
   ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.roundRect ? ctx.roundRect(30, 30, 840, 440, 16) : ctx.rect(30, 30, 840, 440);
+  ctx.roundRect(30, 30, 840, 440, 16);
   ctx.fill(); ctx.stroke();
 
   // Ligne d'accent supérieure (Cobalt)
   ctx.fillStyle = '#3b82f6';
   ctx.fillRect(30, 30, 840, 4);
 
+  // --- TENTATIVE DE CHARGEMENT DE L'AVATAR FB ---
+  let avatarLoaded = false;
+  let avatarImg;
+  try {
+    // URL officielle Graph API pour l'avatar carré en haute résolution (500x500)
+    const avatarUrl = `https://graph.facebook.com/${userId}/picture?width=500&height=500&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+    avatarImg = await loadImage(avatarUrl);
+    avatarLoaded = true;
+  } catch (e) {
+    // Fallback si l'avatar échoue (compte restreint ou API inaccessible)
+    avatarLoaded = false;
+  }
+
+  // Positionnement des textes selon la présence ou non de l'avatar
+  const textStartX = avatarLoaded ? 160 : 60;
+
+  // Rendu de l'avatar en cercle s'il est chargé
+  if (avatarLoaded) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(100, 105, 40, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(avatarImg, 60, 65, 80, 80);
+    ctx.restore();
+
+    // Petit cercle décoratif "Online / Sécurisé" (Cobalt) autour de l'avatar
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(100, 105, 42, 0, Math.PI * 2, true);
+    ctx.stroke();
+  }
+
   // Titres du relevé
   ctx.fillStyle = '#ffffff';
-  ctx.font = '600 24px system-ui, sans-serif';
-  ctx.fillText("RELEVÉ DE COMPTE BANCAIRE", 60, 85);
+  ctx.font = 'bold 24px sans-serif';
+  ctx.fillText("RELEVÉ DE COMPTE BANCAIRE", textStartX, 95);
 
   ctx.fillStyle = '#64748b';
-  ctx.font = '500 12px system-ui, sans-serif';
-  ctx.fillText(`TITULAIRE : ${userName.toUpperCase()}  |  ID : ${userId}`, 60, 115);
+  ctx.font = '500 12px sans-serif';
+  ctx.fillText(`TITULAIRE : ${userName.toUpperCase()}  |  ID : ${userId}`, textStartX, 125);
 
   // Zone des Soldes (Grille asymétrique épurée)
   // 1. Solde Liquide (Cash)
   ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(60, 150, 370, 120, 12) : ctx.rect(60, 150, 370, 120); ctx.fill();
+  ctx.roundRect(60, 170, 370, 120, 12); 
+  ctx.fill();
   
   ctx.fillStyle = '#64748b';
-  ctx.font = '600 11px system-ui, sans-serif';
-  ctx.fillText("ARGENT LIQUIDE / CASH", 80, 185);
+  ctx.font = 'bold 11px sans-serif';
+  ctx.fillText("ARGENT LIQUIDE / CASH", 80, 205);
   ctx.fillStyle = '#f8fafc';
-  ctx.font = '600 26px system-ui, sans-serif';
-  ctx.fillText(fmt(cash), 80, 225);
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillText(fmt(cash), 80, 245);
 
   // 2. Solde Coffre (Bank)
   ctx.fillStyle = 'rgba(59, 130, 246, 0.04)';
-  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(470, 150, 370, 120, 12) : ctx.rect(470, 150, 370, 120); ctx.fill();
+  ctx.roundRect(470, 170, 370, 120, 12); 
+  ctx.fill();
   
   ctx.fillStyle = '#60a5fa';
-  ctx.font = '600 11px system-ui, sans-serif';
-  ctx.fillText("COMPTE ÉPARGNE SÉCURISÉ", 490, 185);
+  ctx.font = 'bold 11px sans-serif';
+  ctx.fillText("COMPTE ÉPARGNE SÉCURISÉ", 490, 205);
   ctx.fillStyle = '#60a5fa';
-  ctx.font = '600 26px system-ui, sans-serif';
-  ctx.fillText(fmt(bank), 490, 225);
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillText(fmt(bank), 490, 245);
 
   // Barre d'activité en bas
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-  ctx.beginPath(); ctx.moveTo(60, 320); ctx.lineTo(840, 320); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(60, 330); ctx.lineTo(840, 330); ctx.stroke();
 
   // Statut de la dernière transaction
   ctx.fillStyle = '#94a3b8';
-  ctx.font = '400 14px system-ui, sans-serif';
-  ctx.fillText(`Dernière opération : ${statusText}`, 60, 365);
+  ctx.font = '14px sans-serif';
+  ctx.fillText(`Dernière opération : ${statusText}`, 60, 375);
 
   // Signature de temps et pied de page
   const dateStr = moment().tz("Europe/Paris").format("DD.MM.YYYY // HH:mm");
   ctx.fillStyle = '#64748b';
-  ctx.font = '500 12px system-ui, sans-serif';
+  ctx.font = '500 12px sans-serif';
   ctx.fillText(dateStr, 60, 435);
   ctx.fillText("SÉCURISÉ PAR CENTRAL STUDIO BANK", 590, 435);
 
@@ -126,7 +180,7 @@ async function generateBankCanvas(userId, userName, cash, bank, statusText) {
 module.exports = {
   config: {
     name: "bank",
-    version: "2026.1",
+    version: "2026.3",
     author: "Célestin",
     countDown: 3,
     role: 0,
@@ -141,25 +195,23 @@ module.exports = {
     const { senderID, mentions, messageReply } = event;
     const userData = await usersData.get(senderID);
     
-    // Initialisation des données si inexistantes
     if (!userData.bank) userData.bank = 0;
     const cash = userData.money || 0;
-    const bank = userData.bank || 0;
+    let bank = userData.bank || 0;
     const userName = userData.name || `User_${senderID}`;
 
     const action = args[0] ? args[0].toLowerCase() : "me";
 
-    // Mettre à jour les intérêts à chaque interaction bancaire pour simuler une vraie banque
-    if (userData.bank > 0) {
-      const interests = Math.floor(userData.bank * INTEREST_RATE);
+    // Application des intérêts en cours (simule une actualisation horaire/par action)
+    if (bank > 0) {
+      const interests = Math.floor(bank * INTEREST_RATE);
       if (interests > 0) {
-        userData.bank += interests;
-        await usersData.set(senderID, { bank: userData.bank });
+        bank += interests;
+        await usersData.set(senderID, { bank: bank });
       }
     }
 
     switch (action) {
-      // ════════════ ME / SOLDE ════════════
       case "me":
       case "info": {
         if (!canvasAvailable) {
@@ -169,7 +221,6 @@ module.exports = {
         return message.reply({ attachment: fs.createReadStream(imagePath) }, () => fs.unlinkSync(imagePath));
       }
 
-      // ════════════ DEPOSIT / DÉPOT ════════════
       case "deposit":
       case "dep": {
         const amount = parseAmount(args[1], cash);
@@ -186,7 +237,6 @@ module.exports = {
         return message.reply({ attachment: fs.createReadStream(imagePath) }, () => fs.unlinkSync(imagePath));
       }
 
-      // ════════════ WITHDRAW / RETRAIT ════════════
       case "withdraw":
       case "wd": {
         const amount = parseAmount(args[1], bank);
@@ -203,11 +253,9 @@ module.exports = {
         return message.reply({ attachment: fs.createReadStream(imagePath) }, () => fs.unlinkSync(imagePath));
       }
 
-      // ════════════ TRANSFER / VIREMENT BANCAIRE ════════════
       case "transfer":
       case "trn": {
         let targetID = Object.keys(mentions)[0] || messageReply?.senderID;
-        // Filtrer l'argument du montant (évite l'UID de la mention)
         const amountArg = args.slice(1).find(a => /^[\d,.]+[kmbt]?$/i.test(a) || a.toLowerCase() === "all");
         const amount = parseAmount(amountArg, bank);
 
@@ -220,8 +268,6 @@ module.exports = {
         if (!targetData) return message.reply("▫️ Compte bénéficiaire introuvable dans la base de données.");
 
         const targetBank = targetData.bank || 0;
-
-        // Éxécution des transactions de compte à compte bancaire
         const newSenderBank = bank - amount;
         const newReceiverBank = targetBank + amount;
 
@@ -232,8 +278,10 @@ module.exports = {
 
         let receiverName = targetData.name || `User_${targetID}`;
         try {
-          const fbInfo = await api.getUserInfo([targetID]);
-          receiverName = fbInfo[targetID]?.name || receiverName;
+          const fbInfo = await api.getUserInfo(targetID);
+          if (fbInfo && fbInfo[targetID]) {
+            receiverName = fbInfo[targetID].name || receiverName;
+          }
         } catch (_) {}
 
         if (!canvasAvailable) return message.reply(`✦ Virement validé : ${fmt(amount)} virés sur le compte bancaire de ${receiverName}.`);
@@ -246,4 +294,3 @@ module.exports = {
     }
   }
 };
-
