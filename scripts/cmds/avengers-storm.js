@@ -1,6 +1,3 @@
-const { createCanvas, loadImage } = require('canvas');
-const axios = require('axios');
-
 const characters = [
   { name: "Iron Man (Mark LXXXV)", power: 85, basic: "Rayon Répulseur 🦾⚡", ultimate: "Blaster Nano-Technologique 💥🌀" },
   { name: "Thor (Stormbreaker)", power: 88, basic: "Appel de la Foudre ⚡🔨", ultimate: "Colère d'Asgard ⛈️✨" },
@@ -25,135 +22,27 @@ function randomBetween(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// Génère une barre de statut textuelle dynamique (Vie ou Énergie)
+function makeBar(value, max, charFull, charEmpty) {
+  const size = 10;
+  const filledCount = Math.round((Math.max(0, value) / max) * size);
+  const emptyCount = size - filledCount;
+  return charFull.repeat(filledCount) + charEmpty.repeat(emptyCount);
+}
+
 if (!global.avengersGameState) {
   global.avengersGameState = {};
-}
-
-async function getAvatarBuffer(uid) {
-  try {
-    const url = `https://graph.facebook.com/${uid}/picture?width=200&height=200`;
-    const response = await axios.get(url, { responseType: 'arraybuffer', timeout: 1200 });
-    return Buffer.from(response.data, 'binary');
-  } catch (e) {
-    return null;
-  }
-}
-
-async function drawAvatar(ctx, uid, name, x, y, size, color) {
-  const pBuf = await getAvatarBuffer(uid);
-  if (pBuf) {
-    try {
-      const img = await loadImage(pBuf);
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(img, x, y, size, size);
-      ctx.restore();
-      return;
-    } catch (e) {}
-  }
-  ctx.fillStyle = '#1f2833';
-  ctx.fillRect(x, y, size, size);
-  ctx.fillStyle = color;
-  ctx.font = 'bold 45px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(name.substring(0, 1).toUpperCase(), x + (size / 2), y + (size / 2));
-}
-
-function generateWelcomeCanvas() {
-  const canvas = createCanvas(750, 280);
-  const ctx = canvas.getContext('2d');
-  
-  ctx.fillStyle = '#0b0c10';
-  ctx.fillRect(0, 0, 750, 280);
-  
-  ctx.strokeStyle = '#66fcf1';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(15, 15, 720, 250);
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 36px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('AVENGERS STORM', 375, 110);
-
-  ctx.fillStyle = '#66fcf1';
-  ctx.font = 'italic 20px sans-serif';
-  ctx.fillText('ÉDITION CANVAS RÉEL', 375, 160);
-
-  ctx.fillStyle = '#86c232';
-  ctx.font = 'bold 16px sans-serif';
-  ctx.fillText('Envoyez "start" pour rejoindre l\'arène', 375, 220);
-
-  return canvas.toBuffer();
-}
-
-async function generateBattleCanvas(p1Name, p2Name, p1HP, p2HP, p1Chakra, p2Chakra, p1Uid, p2Uid) {
-  const canvas = createCanvas(750, 280);
-  const ctx = canvas.getContext('2d');
-
-  ctx.fillStyle = '#0b0c10';
-  ctx.fillRect(0, 0, 750, 280);
-  
-  ctx.strokeStyle = '#1f2833';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(10, 10, 730, 260);
-
-  ctx.fillStyle = '#66fcf1';
-  ctx.font = 'italic bold 42px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('VS', 375, 110);
-
-  await drawAvatar(ctx, p1Uid, p1Name, 30, 30, 110, '#66fcf1');
-  await drawAvatar(ctx, p2Uid, p2Name, 610, 30, 110, '#ff4757');
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 16px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(p1Name.substring(0, 14), 30, 165);
-  ctx.textAlign = 'right';
-  ctx.fillText(p2Name.substring(0, 14), 720, 165);
-
-  ctx.fillStyle = '#1c1c24';
-  ctx.fillRect(30, 185, 220, 22);
-  ctx.fillStyle = p1HP > 40 ? '#2ecc71' : '#e74c3c';
-  ctx.fillRect(30, 185, (Math.max(0, p1HP) / 100) * 220, 22);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '12px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(`HP: ${p1HP}%`, 35, 201);
-
-  ctx.fillStyle = '#1c1c24';
-  ctx.fillRect(500, 185, 220, 22);
-  ctx.fillStyle = p2HP > 40 ? '#2ecc71' : '#e74c3c';
-  ctx.fillRect(500 + (220 - (Math.max(0, p2HP) / 100) * 220), 185, (Math.max(0, p2HP) / 100) * 220, 22);
-  ctx.fillStyle = '#ffffff';
-  ctx.textAlign = 'right';
-  ctx.fillText(`HP: ${p2HP}%`, 715, 201);
-
-  ctx.fillStyle = '#112233';
-  ctx.fillRect(30, 215, 220, 14);
-  ctx.fillStyle = '#f1c40f';
-  ctx.fillRect(30, 215, (p1Chakra / 100) * 220, 14);
-
-  ctx.fillStyle = '#112233';
-  ctx.fillRect(500, 215, 220, 14);
-  ctx.fillStyle = '#f1c40f';
-  ctx.fillRect(500 + (220 - (p2Chakra / 100) * 220), 215, (p2Chakra / 100) * 220, 14);
-
-  return canvas.toBuffer();
 }
 
 module.exports = {
   config: { 
     name: "avengers-storm", 
-    version: "7.7",
-    author: "Celestin •|• ꗇ︱Blẳ'''k 义",
+    version: "8.0",
+    author: "Celestin & AI",
     role: 0,
     category: "game",
-    shortDescription: "Combat Avengers stable sans bug Canvas",
-    longDescription: "Jeu de combat avec rendu Canvas fluide et robuste face aux pannes d'images.",
+    shortDescription: "Combat Avengers ultra-rapide 100% textuel",
+    longDescription: "Jeu de combat optimisé en texte pur avec barres de statut pour une compatibilité parfaite.",
     guide: { en: "{p}avengers-storm" }
   },
 
@@ -171,14 +60,8 @@ module.exports = {
       lastAction: null, lastPlayer: null
     };
 
-    const welcomeMsg = "🎬 𝗔𝗩𝗘𝗡𝗚𝗘𝗥𝗦-𝗦𝗧𝗢𝗥𝗠 : 𝗘𝗗𝗜𝗧𝗜𝗢𝗡 𝗖𝗔𝗡𝗩𝗔𝗦\n━━━━━━━━━━━━━━━━━\nEnvoyez \"start\" pour lancer la partie !";
-
-    try {
-      const welcomeCanvas = generateWelcomeCanvas();
-      return message.reply({ body: welcomeMsg, attachment: welcomeCanvas });
-    } catch (e) {
-      return message.reply(welcomeMsg);
-    }
+    const welcomeMsg = "🎬 𝗔𝗩𝗘𝗡𝗚𝗘𝗥𝗦-𝗦𝗧𝗢𝗥𝗠 : 𝗘𝗗𝗜𝗧𝗜𝗢𝗡 𝗧𝗘𝗫𝗧𝗨𝗘𝗟𝗟𝗘\n━━━━━━━━━━━━━━━━━━━━━\nEnvoyez \"start\" dans le groupe pour lancer la partie !";
+    return message.reply(welcomeMsg);
   },
 
   handleEvent: async function ({ event, message, usersData }) {
@@ -215,7 +98,7 @@ module.exports = {
       state.players.p2 = userID;
       state.step = "choose_characters_p1";
       
-      let list = "🎭 𝗦𝗘𝗟𝗘𝗖𝗧𝗜𝗢𝗡 𝗗𝗨 𝗛𝗘𝗥𝗢𝗦\n━━━━━━━━━━━━━━━━━\n";
+      let list = "🎭 𝗦𝗘𝗟𝗘𝗖𝗧𝗜𝗢𝗡 𝗗𝗨 𝗛𝗘𝗥𝗢𝗦\n━━━━━━━━━━━━━━━━━━━━━\n";
       list += characters.map((c, i) => `${i + 1}. ${c.name} (${c.power}★)`).join("\n");
       
       const p1Name = await usersData.getName(state.players.p1) || "Joueur 1";
@@ -247,7 +130,7 @@ module.exports = {
         const p1Name = await usersData.getName(state.players.p1) || "Joueur 1";
         const p2Name = await usersData.getName(state.players.p2) || "Joueur 2";
         
-        const startText = `⚔️ 𝗟𝗘 𝗖𝗛𝗢𝗖 𝗗𝗘𝗦 𝗛𝗘𝗥𝗢𝗦\n━━━━━━━━━━━━━━━━━\n` +
+        const startText = `⚔️ 𝗟𝗘 𝗖𝗛𝗢𝗖 𝗗𝗘𝗦 𝗛𝗘𝗥𝗢𝗦\n━━━━━━━━━━━━━━━━━━━━━\n` +
           `🥊 ${state.p1Character.name} 𝗩𝗦 ${state.p2Character.name}\n\n` +
           `🎮 𝗔𝗖𝗧𝗜𝗢𝗡𝗦 𝗗𝗜𝗦𝗣𝗢𝗡𝗜𝗕𝗟𝗘𝗦 :\n` +
           `» 𝗮 : Attaque Simple (0 Énergie)\n` +
@@ -257,14 +140,9 @@ module.exports = {
           `» 𝗱 : Posture de Garde (Dégâts bloqués)\n` +
           `» 𝗲 : Tenter une Esquive (-15 Énergie)\n` +
           `» 𝗳 : Tenter un Contre-Attaque (-30 Énergie)\n\n` +
-          `👉 @${p1Name}, à vous de lancer les hostilités !`;
+          `👉 @${p1Name}, à vous de commencer !`;
         
-        try {
-          const canvas = await generateBattleCanvas(p1Name, p2Name, state.p1HP, state.p2HP, state.p1Chakra, state.p2Chakra, state.players.p1, state.players.p2);
-          return message.reply({ body: startText, attachment: canvas, mentions: [{ tag: `@${p1Name}`, id: state.players.p1 }] });
-        } catch(e) {
-          return message.reply({ body: startText, mentions: [{ tag: `@${p1Name}`, id: state.players.p1 }] });
-        }
+        return message.reply({ body: startText, mentions: [{ tag: `@${p1Name}`, id: state.players.p1 }] });
       }
       return;
     }
@@ -357,9 +235,9 @@ module.exports = {
           else if (mode === "evading") {
             if (Math.random() < state.status.chance) {
               damage = 0;
-              actionLog += `\n💨 Esquive réussie ! Le coup se perd dans le décor.`;
+              actionLog += `\n💨 Esquive réussie ! Le coup se perd dans le vide.`;
             } else {
-              actionLog += `\n💥 L'esquive échoue ! L'impact frappe pleinement.`;
+              actionLog += `\n💥 L'esquive échoue ! L'impact frappe de plein fouet.`;
             }
             state.status = null;
           } 
@@ -385,7 +263,22 @@ module.exports = {
       const p1Name = await usersData.getName(state.players.p1) || "Joueur 1";
       const p2Name = await usersData.getName(state.players.p2) || "Joueur 2";
 
-      let outputMsg = `📝 𝗘𝗩𝗘𝗡𝗘𝗠𝗘𝗡𝗧 𝗗𝗨 𝗧𝗢𝗨𝗥 :\n${actionLog}\n`;
+      // --- CRÉATION DE L'INTERFACE VISUELLE TEXTUELLE ---
+      const p1HpBar = makeBar(state.p1HP, 100, "❤️", "🖤");
+      const p2HpBar = makeBar(state.p2HP, 100, "❤️", "🖤");
+      const p1MpBar = makeBar(state.p1Chakra, 100, "⚡", "⚫");
+      const p2MpBar = makeBar(state.p2Chakra, 100, "⚡", "⚫");
+
+      let battleStateText = `🔵 [ ${p1Name} • ${state.p1Character.name} ]\n`;
+      battleStateText += `├ HP : ${p1HpBar} (${state.p1HP}%)\n`;
+      battleStateText += `└ NRG: ${p1MpBar} (${state.p1Chakra}%)\n\n`;
+
+      battleStateText += `🔴 [ ${p2Name} • ${state.p2Character.name} ]\n`;
+      battleStateText += `├ HP : ${p2HpBar} (${state.p2HP}%)\n`;
+      battleStateText += `└ NRG: ${p2MpBar} (${state.p2Chakra}%)\n`;
+      battleStateText += `━━━━━━━━━━━━━━━━━━━━━\n`;
+
+      let outputMsg = `📝 𝗘𝗩𝗘𝗡𝗘𝗠𝗘𝗡𝗧 𝗗𝗨 𝗧𝗢𝗨𝗥 :\n${actionLog}\n\n${battleStateText}`;
 
       if (state.p1HP <= 0 || state.p2HP <= 0) {
         const victorieux = state.p1HP <= 0 ? p2Name : p1Name;
@@ -398,21 +291,10 @@ module.exports = {
         outputMsg += `\n👉 À votre tour, @${nextName} !`;
       }
 
-      try {
-        const canvasBuffer = await generateBattleCanvas(
-          p1Name, p2Name, state.p1HP, state.p2HP, state.p1Chakra, state.p2Chakra, state.players.p1, state.players.p2
-        );
-        return message.reply({
-          body: outputMsg,
-          attachment: canvasBuffer,
-          mentions: [{ tag: `@${p1Name}`, id: state.players.p1 }, { tag: `@${p2Name}`, id: state.players.p2 }]
-        });
-      } catch(e) {
-        return message.reply({
-          body: outputMsg + `\n\n❤️ P1: ${state.p1HP}% | ❤️ P2: ${state.p2HP}%`,
-          mentions: [{ tag: `@${p1Name}`, id: state.players.p1 }, { tag: `@${p2Name}`, id: state.players.p2 }]
-        });
-      }
+      return message.reply({
+        body: outputMsg,
+        mentions: [{ tag: `@${p1Name}`, id: state.players.p1 }, { tag: `@${p2Name}`, id: state.players.p2 }]
+      });
     }
   }
 };
