@@ -83,9 +83,9 @@ function cleanText(text) {
 // 🌸 FRAME
 function frame(text) {
   return `
-┅┅┅┅┅┅≧◉◡◉≦┅┅┅┅┅
+┅┅┅┅┅┅┅┅┅┅┅
 ${text}
-┅┅┅┅┅┅Ｏ(≧∇≦)Ｏ┅┅┅┅┅𝔯һｍ 𝚙𝔯օ𝘵օ𝘵𝑦𝚙𝖊
+┅┅┅┅┅┅┅┅┅┅┅
 `;
 }
 
@@ -108,8 +108,6 @@ Règles:
 - écrit mais pas  trop long
 - écrit avec emoji pour exprimer t'es sentiment
 - n'est répète jamais pas trop de bonjour pas trop de salut etc
-- tu peux tenir une conversation comme un humain 
-- tu peux est en mesure de répondre a n'importe quel question 
 Utilisateur: ${mem.name || "inconnu"}
 Heure: ${getTime()}
 Humeur: ${mem.mood}
