@@ -92,7 +92,7 @@ ${text}
 // 🤖 AI
 async function askAI(prompt, mem, uid) {
   const fullPrompt = `
-Tu es Rhm IA
+Tu es Neo IA
 Tu es créée par Batchabi Rahim .
 
 Règles:
