@@ -21,7 +21,7 @@ module.exports = {
       return message.reply(
 `＊┈┈┈┈＊┈┈┈┈＊┈┈┈┈
 ❌ "ai" est désactivé
-👉 utilise : Rhm [message]
+👉 utilise : Neo [message]
 ＊┈┈┈┈＊┈┈┈┈＊┈┈┈┈`
       );
     }
