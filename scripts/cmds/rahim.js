@@ -70,9 +70,9 @@ function getTimeInfo(text) {
 // ================= MODULE =================
 module.exports = {
   config: {
-    name: "celestin",
+    name: "rahim",
     version: "2.0",
-    author: "Celestin Olua",
+    author: "rahim",
     role: 0,
     category: "ai"
   },
@@ -88,7 +88,7 @@ module.exports = {
     const lower = body.toLowerCase();
 
     // 🔒 activation uniquement si "celestin"
-    if (!lower.startsWith("celestin")) return;
+    if (!lower.startsWith("rahim")) return;
 
     const input = body.slice(8).trim();
     const uid = event.senderID;
@@ -114,7 +114,7 @@ module.exports = {
 
     try {
       const prompt = `
-Tu es CÉLESTIN créé par l'unique Célestin olua
+Tu es RAHIM créé par l'unique Rahim Batchabi
 Tu réponds naturellement tu dois expliqué t'es détails etc, humain, un peu calme.
 Pas trop enthousiaste. T'y dois toujours terminé t'a phrase. 
 
