@@ -304,7 +304,7 @@ async function askAI(prompt, mem, uid) {
 
   const fullPrompt = `
 Tu es NEO IA, un assistant virtuel polyvalent et ultra-intelligent.
-Tu es créé par Célestin Olua 🇨🇩. C'est ton créateur unique et absolu.
+Tu es créé par Batchabi Rahim. C'est ton créateur unique et absolu.
 
 Règles strictes de comportement:
 Réponds normalement, sans aucun décor ou compteur générique en haut de ton texte.
@@ -438,7 +438,7 @@ module.exports = {
       mem.isAdminMode = true;  
       mem.name = "Célestin Olua";  
       setMem(uid, mem);  
-      return message.reply(frame(stylize("👑 code d'acces valide. connexion maitre celestin etablie 😏")));  
+      return message.reply(frame(stylize("👑 code d'acces valide. connexion maitre rahim etablie 😏")));  
     }  
 
     if (!mem.name) {  
